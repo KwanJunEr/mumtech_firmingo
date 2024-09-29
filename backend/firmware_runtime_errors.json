@@ -1,0 +1,45 @@
+{
+    "dataset_name": "Firmware Error Examples",
+    "errors": [
+        {
+            "error_type": "Segmentation Fault",
+            "samples": [
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid read_array(int *arr, int size) {\n    for (int i = 0; i <= size; i++) {  // Error: off-by-one error\n        printf(\"%d\\n\", arr[i]);       // Accessing out of bounds\n    }\n}\n\nint main() {\n    int data[5] = {1, 2, 3, 4, 5};\n    read_array(data, 5);  // size is 5, valid indices are 0-4\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid read_array(int *arr, int size) {\n    for (int i = 0; i < size; i++) {  // Fixed: changed <= to <\n        printf(\"%d\\n\", arr[i]);       // Now accesses valid indices\n    }\n}\n\nint main() {\n    int data[5] = {1, 2, 3, 4, 5};\n    read_array(data, 5);  // size is 5, valid indices are 0-4\n    return 0;\n}\n",
+                    "common_causes": "Off-by-one error in loop condition leading to out-of-bounds access."
+                },
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid process_data(int *data) {\n    *data = 100;  // Error: Dereferencing a null pointer\n}\n\nint main() {\n    int *ptr = NULL;  // Null pointer initialization\n    process_data(ptr); // Passing null pointer\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid process_data(int *data) {\n    if (data != NULL) {  // Added check for null pointer\n        *data = 100;\n    }\n}\n\nint main() {\n    int value;         // Proper initialization\n    int *ptr = &value; // Now pointing to a valid memory address\n    process_data(ptr); // Passing valid pointer\n    return 0;\n}\n",
+                    "common_causes": "Dereferencing a null pointer without proper checks."
+                },
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid faulty_function() {\n    char *str = \"Hello, World!\"; // Points to string literal\n    str[0] = 'h';  // Error: Modifying read-only memory\n}\n\nint main() {\n    faulty_function(); // Calls the function that causes segmentation fault\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid correct_function() {\n    char str[] = \"Hello, World!\"; // Allocate array on stack\n    str[0] = 'h';  // Now it's safe to modify\n}\n\nint main() {\n    correct_function(); // Calls the function that executes safely\n    return 0;\n}\n",
+                    "common_causes": "Attempting to modify a string literal, which is stored in read-only memory."
+                }
+            ]
+        },
+        {
+            "error_type": "Stack Overflow",
+            "samples": [
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid recursive_function(int count) {\n    printf(\"%d\\n\", count);\n    recursive_function(count + 1);  // Error: infinite recursion\n}\n\nint main() {\n    recursive_function(1);  // Starting recursion\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid recursive_function(int count) {\n    if (count > 10) return;  // Base case to terminate recursion\n    printf(\"%d\\n\", count);\n    recursive_function(count + 1);  // Controlled recursion\n}\n\nint main() {\n    recursive_function(1);  // Starting recursion\n    return 0;\n}\n",
+                    "common_causes": "Missing base case in recursion leading to infinite recursion."
+                },
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid large_stack_function() {\n    int large_array[100000];  // Error: large stack allocation\n    // Do something with large_array\n}\n\nint main() {\n    large_stack_function(); // Calls the function that may cause stack overflow\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>  // For malloc and free\n\nvoid large_heap_function() {\n    int *large_array = (int *)malloc(100000 * sizeof(int)); // Use heap allocation\n    if (large_array == NULL) {\n        // Handle memory allocation failure\n    }\n    // Do something with large_array\n    free(large_array);  // Don't forget to free the memory\n}\n\nint main() {\n    large_heap_function(); // Calls the function that executes safely\n    return 0;\n}\n",
+                    "common_causes": "Large local variable allocations exceeding the stack size."
+                },
+                {
+                    "wrong_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid call_next() {\n    call_next(); // Error: function calling itself indefinitely\n}\n\nint main() {\n    call_next(); // Triggers stack overflow due to no termination\n    return 0;\n}\n",
+                    "right_code": "\n#include <stdint.h>\n#include <stdio.h>\n\nvoid call_next(int count) {\n    if (count > 10) return; // Base case to prevent overflow\n    call_next(count + 1); // Controlled recursion\n}\n\nint main() {\n    call_next(1); // Starts the controlled recursion\n    return 0;\n}\n",
+                    "common_causes": "Infinite recursion without a base case, leading to stack overflow."
+                }
+            ]
+        }
+    ]
+}
